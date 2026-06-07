@@ -1,0 +1,755 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Landlord Management API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: properties
+    description: Property management
+  - name: tenants
+    description: Tenant management
+  - name: invoices
+    description: Invoice and billing management
+  - name: charges
+    description: Additional charges management
+  - name: payments
+    description: Payment tracking
+  - name: dashboard
+    description: Dashboard statistics
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List all properties
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+    post:
+      operationId: createProperty
+      tags: [properties]
+      summary: Create a property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+
+  /properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get a property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+    patch:
+      operationId: updateProperty
+      tags: [properties]
+      summary: Update a property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PropertyUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+    delete:
+      operationId: deleteProperty
+      tags: [properties]
+      summary: Delete a property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /tenants:
+    get:
+      operationId: listTenants
+      tags: [tenants]
+      summary: List all tenants
+      parameters:
+        - name: propertyId
+          in: query
+          required: false
+          schema: { type: integer }
+        - name: search
+          in: query
+          required: false
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [active, inactive] }
+      responses:
+        "200":
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+    post:
+      operationId: createTenant
+      tags: [tenants]
+      summary: Create a tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /tenants/{id}:
+    get:
+      operationId: getTenant
+      tags: [tenants]
+      summary: Get a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+    patch:
+      operationId: updateTenant
+      tags: [tenants]
+      summary: Update a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+    delete:
+      operationId: deleteTenant
+      tags: [tenants]
+      summary: Delete a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      summary: List invoices
+      parameters:
+        - name: tenantId
+          in: query
+          required: false
+          schema: { type: integer }
+        - name: propertyId
+          in: query
+          required: false
+          schema: { type: integer }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [paid, unpaid, partial, overdue] }
+        - name: month
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      summary: Create an invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /invoices/generate:
+    post:
+      operationId: generateMonthlyInvoices
+      tags: [invoices]
+      summary: Generate monthly invoices for all active tenants
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateInvoicesInput"
+      responses:
+        "200":
+          description: Generated invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      summary: Get an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Invoice with line items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceDetail"
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      summary: Update an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvoiceUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    delete:
+      operationId: deleteInvoice
+      tags: [invoices]
+      summary: Delete an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /invoices/{id}/charges:
+    get:
+      operationId: listInvoiceCharges
+      tags: [charges]
+      summary: List charges for an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of charges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Charge"
+    post:
+      operationId: addCharge
+      tags: [charges]
+      summary: Add a charge to an invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChargeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Charge"
+
+  /charges/{id}:
+    patch:
+      operationId: updateCharge
+      tags: [charges]
+      summary: Update a charge
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChargeUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Charge"
+    delete:
+      operationId: deleteCharge
+      tags: [charges]
+      summary: Delete a charge
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments
+      parameters:
+        - name: tenantId
+          in: query
+          required: false
+          schema: { type: integer }
+        - name: invoiceId
+          in: query
+          required: false
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: recordPayment
+      tags: [payments]
+      summary: Record a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      summary: Delete a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/overdue:
+    get:
+      operationId: getOverdueInvoices
+      tags: [dashboard]
+      summary: Get overdue invoices
+      responses:
+        "200":
+          description: Overdue invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status: { type: string }
+      required: [status]
+
+    Property:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        address: { type: string }
+        description: { type: ["string", "null"] }
+        totalUnits: { type: integer }
+        createdAt: { type: string }
+      required: [id, name, address, totalUnits, createdAt]
+
+    PropertyInput:
+      type: object
+      properties:
+        name: { type: string }
+        address: { type: string }
+        description: { type: string }
+        totalUnits: { type: integer }
+      required: [name, address, totalUnits]
+
+    PropertyUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        address: { type: string }
+        description: { type: string }
+        totalUnits: { type: integer }
+
+    Tenant:
+      type: object
+      properties:
+        id: { type: integer }
+        propertyId: { type: ["integer", "null"] }
+        propertyName: { type: ["string", "null"] }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: ["string", "null"] }
+        roomNumber: { type: string }
+        address: { type: ["string", "null"] }
+        moveInDate: { type: string }
+        rentAmount: { type: number }
+        securityDeposit: { type: number }
+        notes: { type: ["string", "null"] }
+        status: { type: string, enum: [active, inactive] }
+        createdAt: { type: string }
+      required: [id, fullName, phone, roomNumber, moveInDate, rentAmount, securityDeposit, status, createdAt]
+
+    TenantInput:
+      type: object
+      properties:
+        propertyId: { type: integer }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        roomNumber: { type: string }
+        address: { type: string }
+        moveInDate: { type: string }
+        rentAmount: { type: number }
+        securityDeposit: { type: number }
+        notes: { type: string }
+        status: { type: string, enum: [active, inactive] }
+      required: [fullName, phone, roomNumber, moveInDate, rentAmount, securityDeposit]
+
+    TenantUpdate:
+      type: object
+      properties:
+        propertyId: { type: integer }
+        fullName: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        roomNumber: { type: string }
+        address: { type: string }
+        moveInDate: { type: string }
+        rentAmount: { type: number }
+        securityDeposit: { type: number }
+        notes: { type: string }
+        status: { type: string, enum: [active, inactive] }
+
+    Invoice:
+      type: object
+      properties:
+        id: { type: integer }
+        invoiceNumber: { type: string }
+        tenantId: { type: integer }
+        tenantName: { type: string }
+        roomNumber: { type: string }
+        propertyName: { type: ["string", "null"] }
+        billingPeriodStart: { type: string }
+        billingPeriodEnd: { type: string }
+        dueDate: { type: string }
+        rentAmount: { type: number }
+        totalCharges: { type: number }
+        totalAmount: { type: number }
+        paidAmount: { type: number }
+        status: { type: string, enum: [paid, unpaid, partial, overdue] }
+        createdAt: { type: string }
+      required: [id, invoiceNumber, tenantId, tenantName, roomNumber, billingPeriodStart, billingPeriodEnd, dueDate, rentAmount, totalCharges, totalAmount, paidAmount, status, createdAt]
+
+    InvoiceDetail:
+      type: object
+      properties:
+        id: { type: integer }
+        invoiceNumber: { type: string }
+        tenantId: { type: integer }
+        tenantName: { type: string }
+        tenantPhone: { type: string }
+        tenantEmail: { type: ["string", "null"] }
+        roomNumber: { type: string }
+        propertyName: { type: ["string", "null"] }
+        propertyAddress: { type: ["string", "null"] }
+        billingPeriodStart: { type: string }
+        billingPeriodEnd: { type: string }
+        dueDate: { type: string }
+        rentAmount: { type: number }
+        charges: { type: array, items: { $ref: "#/components/schemas/Charge" } }
+        totalCharges: { type: number }
+        totalAmount: { type: number }
+        paidAmount: { type: number }
+        status: { type: string, enum: [paid, unpaid, partial, overdue] }
+        payments: { type: array, items: { $ref: "#/components/schemas/Payment" } }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, invoiceNumber, tenantId, tenantName, tenantPhone, roomNumber, billingPeriodStart, billingPeriodEnd, dueDate, rentAmount, charges, totalCharges, totalAmount, paidAmount, status, payments, createdAt]
+
+    InvoiceInput:
+      type: object
+      properties:
+        tenantId: { type: integer }
+        billingPeriodStart: { type: string }
+        billingPeriodEnd: { type: string }
+        dueDate: { type: string }
+        rentAmount: { type: number }
+        notes: { type: string }
+      required: [tenantId, billingPeriodStart, billingPeriodEnd, dueDate, rentAmount]
+
+    InvoiceUpdate:
+      type: object
+      properties:
+        dueDate: { type: string }
+        rentAmount: { type: number }
+        status: { type: string, enum: [paid, unpaid, partial, overdue] }
+        notes: { type: string }
+
+    GenerateInvoicesInput:
+      type: object
+      properties:
+        month: { type: integer }
+        year: { type: integer }
+        propertyId: { type: integer }
+      required: [month, year]
+
+    Charge:
+      type: object
+      properties:
+        id: { type: integer }
+        invoiceId: { type: integer }
+        chargeType: { type: string }
+        description: { type: string }
+        amount: { type: number }
+        isRecurring: { type: boolean }
+        createdAt: { type: string }
+      required: [id, invoiceId, chargeType, description, amount, isRecurring, createdAt]
+
+    ChargeInput:
+      type: object
+      properties:
+        chargeType: { type: string }
+        description: { type: string }
+        amount: { type: number }
+        isRecurring: { type: boolean }
+      required: [chargeType, description, amount]
+
+    ChargeUpdate:
+      type: object
+      properties:
+        chargeType: { type: string }
+        description: { type: string }
+        amount: { type: number }
+        isRecurring: { type: boolean }
+
+    Payment:
+      type: object
+      properties:
+        id: { type: integer }
+        invoiceId: { type: integer }
+        tenantId: { type: integer }
+        amount: { type: number }
+        paymentDate: { type: string }
+        paymentMethod: { type: string }
+        transactionRef: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string }
+      required: [id, invoiceId, tenantId, amount, paymentDate, paymentMethod, createdAt]
+
+    PaymentInput:
+      type: object
+      properties:
+        invoiceId: { type: integer }
+        tenantId: { type: integer }
+        amount: { type: number }
+        paymentDate: { type: string }
+        paymentMethod: { type: string }
+        transactionRef: { type: string }
+        notes: { type: string }
+      required: [invoiceId, tenantId, amount, paymentDate, paymentMethod]
+
+    DashboardStats:
+      type: object
+      properties:
+        totalTenants: { type: integer }
+        activeTenants: { type: integer }
+        totalProperties: { type: integer }
+        monthlyIncome: { type: number }
+        collectedThisMonth: { type: number }
+        pendingAmount: { type: number }
+        overdueAmount: { type: number }
+        overdueCount: { type: integer }
+        unpaidCount: { type: integer }
+        paidThisMonth: { type: integer }
+      required: [totalTenants, activeTenants, totalProperties, monthlyIncome, collectedThisMonth, pendingAmount, overdueAmount, overdueCount, unpaidCount, paidThisMonth]
+
+    ActivityItem:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string }
+        description: { type: string }
+        amount: { type: ["number", "null"] }
+        tenantName: { type: string }
+        createdAt: { type: string }
+      required: [id, type, description, tenantName, createdAt]
