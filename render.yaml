@@ -4,7 +4,7 @@ services:
     runtime: node
     region: singapore
     plan: free
-    buildCommand: corepack enable && corepack prepare pnpm@latest --activate && pnpm install --no-frozen-lockfile && pnpm --filter @workspace/landlord-app run build && pnpm --filter @workspace/api-server run build
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm --filter @workspace/landlord-app run build && pnpm --filter @workspace/api-server run build
     startCommand: pnpm --filter @workspace/api-server run start
     envVars:
       - key: NODE_ENV
